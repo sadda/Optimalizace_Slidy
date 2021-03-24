@@ -1,6 +1,6 @@
 # Optimalizace B033OPT
 
-Tyto stránky obsahují doplňkový materiál pro výuku kurzu [Optimalizace](https://cw.fel.cvut.cz/wiki/courses/b0b33opt/start?animal=wiki) na FEL ČVUT. Pro jednotlivé hodiny jsou nahrány kreslené poznámky a notebooky, které byly ukazovány na hodině. Tento materiál je doplňkový, jeho hlavním účelem je usnadnit pochopení probírané látky, a tedy nebude součástí zkoušky.
+Tyto stránky obsahují doplňkový materiál pro výuku kurzu [Optimalizace](https://cw.fel.cvut.cz/wiki/courses/b0b33opt/start?animal=wiki) na FEL ČVUT. Pro jednotlivé hodiny jsou nahrány kreslené poznámky a notebooky, které byly ukazovány na hodině. Tento materiál je doplňkový, jeho hlavním účelem je usnadnit pochopení probírané látky, a tedy nebude součástí zkoušky. Pokud Vám nejde načíst notebook, použijte prosím [nbviewer](https://nbviewer.jupyter.org/).
 
 |        | Whiteboard     | Notebook     |
 | :------------- | :----------: | -----------: |
