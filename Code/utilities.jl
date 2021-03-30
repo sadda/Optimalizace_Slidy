@@ -16,6 +16,6 @@ function create_anim(file_name, f, path, xlims, ylims; fps=15)
         push!(plt_path, x[1], x[2]) # add new point to plt_grad
         frame(anim)
     end
-    gif(anim, file_name; fps = fps)
+    gif(anim, file_name; fps = fps, show_msg=false)
     return nothing
 end
