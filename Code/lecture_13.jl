@@ -16,18 +16,18 @@ g(x) = [cos(x[1] + x[2]) - 2*cos(x[1])*sin(x[1]); cos(x[1] + x[2])]
 f(x1,x2) = f([x1;x2])
 g(x1,x2) = g([x1;x2]);
 
-# Zadefinujme definiční obor $[-3,2]\times [-2,2]$ a diskretizujme ho na posloupnosti délky $100$.
+# Zadefinujme definiční obor $[-3,2]\times [-2,2]$.
 
 xlim = (-3, 2)
-ylim = (-2, 2)
-xs = range(xlim[1], xlim[2], length = 100)
-ys = range(ylim[1], ylim[2], length = 100);
+ylim = (-2, 2);
 
 # Opět vykresleme vrstevnice funkce `f`.
 
-plt = contourf(xs, ys, f; color = :jet)
+xs = range(xlim[1], xlim[2], length = 100)
+ys = range(ylim[1], ylim[2], length = 100)
+plt = contourf(xs, ys, f; color = :jet, xlim=xlim, ylim=ylim)
 
-# Nyní ve vybraných bodech vykreslíme gradient. Aby těchto bodů nebylo moc, uděláme diskretizaci domény délky 20. Poté spustíme for cyklus , kde v každém bodě `x` spočteme jeho gradient `x_grad` a vykreslíme šipku z `x` do `x+α*x_grad`.
+# Nyní ve vybraných bodech vykreslíme gradient. Aby těchto bodů nebylo moc, uděláme diskretizaci domény délky 20. Poté spustíme for cyklus, kde v každém bodě `x` spočteme jeho gradient `x_grad` a vykreslíme šipku z `x` do `x+α*x_grad`.
 
 xs = range(xlim[1], xlim[2], length = 20)
 ys = range(ylim[1], ylim[2], length = 20)
@@ -53,7 +53,7 @@ display(plt)
 
 # # Gradient descent
 
-# Nejprve zadefinujme zakladni variantu metody nejvtšího spádu (gradient descent). V každém kroku uděláme update `x -= α*grad(x)`, což je ekvivalentní `x = x - α*grad(x)`. Iterace přerušíme, pokud norma gradientu je menší než `ϵ_tol`. POkud se neuvedou jiné hodnoty, použije funkce `grad_descent` defaultní hodnoty $\alpha=0.1$, 100 iterací a zastavovací podmínku na $10^{-6}$.
+# Nejprve zadefinujme zakladni variantu metody největšího spádu (gradient descent). V každém kroku uděláme update `x -= α*grad(x)`, což je ekvivalentní `x = x - α*grad(x)`. Iterace přerušíme, pokud norma gradientu je menší než `ϵ_tol`. Pokud se neuvedou jiné hodnoty, použije funkce `grad_descent` defaultní hodnoty $\alpha=0.1$, 100 iterací a zastavovací podmínku na $10^{-6}$.
 
 function grad_descent(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6)
     for i in 1:max_iter
@@ -65,7 +65,7 @@ function grad_descent(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6)
     return x
 end;
 
-# Vidíme, že implementace je jednoduchá. Předchozí funkce vrací pouze poslední hodnotu, což je v mnoha případech postačují. Pro vykreslení je ale dobré mít všechny iterace. Předefinujeme tedy funkci `grad_descent` tak, aby vracela i všechny iterace a rezidua (normy gradientu).
+# Vidíme, že implementace je jednoduchá. Předchozí funkce vrací pouze poslední hodnotu, což je v mnoha případech postačující. Pro vykreslení je ale dobré mít všechny iterace. Předefinujeme tedy funkci `grad_descent` tak, aby vracela i všechny iterace a rezidua (normy gradientu).
 
 function grad_descent(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6)
     res = zeros(max_iter)
@@ -83,16 +83,15 @@ function grad_descent(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6)
     return x, x_all, res
 end;
 
-# Vykresl9me nyní, jak gradient descent funguje. Začněme z bodu $x_0=(0; -1)$ a použijme funkci `grad)descent` k uložení všech iterací do `x_all` a všech reziduí do `res`. Poté vytvořme animaci.
+# Vykresleme nyní, jak gradient descent funguje. Začněme z bodu $x_0=(0; -1)$ a použijme funkci `grad_descent` k uložení všech iterací do `x_all` a všech reziduí do `res`. Vytvořme animaci, jak se vyvijí jednotlivé iterace.
 
 x0 = [0.; -1]
 x, x_all, res = grad_descent(g, x0)
-plot(res; yscale=:log10, label="Residual")
 create_anim("Anim_GD1.gif", f, x_all, xlim, ylim);
 
 # ![](Anim_GD1.gif)
 
-# Dostali jsme pšknou konvergenci. Vypadá to ale, že v posledních iterací se proměnná skoro nehýbe. Zvětšeme počet iterací na 1000, proveďme gradient descent ze stejného bodu a vykresleme vývoj reziduí. Použijme logaritmickou osu.
+# Dostali jsme pěknou konvergenci. Vypadá to ale, že v posledních iterací se proměnná skoro nehýbe. Zvětšeme počet iterací na 1000, proveďme gradient descent ze stejného bodu a vykresleme vývoj reziduí. Použijme logaritmickou $y$ osu.
 
 x1, x_all1, res1 = grad_descent(g, x0; max_iter=1000)
 plot(res1; yscale=:log10, label="Residual")
@@ -116,15 +115,15 @@ create_anim("Anim_GD4.gif", f, x_all4, xlim, ylim);
 
 # ![](Anim_GD4.gif)
 
-# Pří malém kroku sice konvergujeme, ale rychlost je pomalá. Při větším kroku se rychle dostaneme poblíž minima, ale poté začneme oscilovat. Při největších kroku divegujeme.
+# Pří malém kroku sice konvergujeme, ale rychlost je pomalá. Při větším kroku se rychle dostaneme poblíž minima, ale poté začneme oscilovat. Při největších kroku divergujeme.
 
 
 
 
 
-# # Armijo d0lka kroku
+# # Volba kroku pomocí Armijo podmínky
 
-# Předchozí cvičení ukazuje, že volba délky kroku je magie a špatné volba může vést k pomalé konvergenci nebo dokonce divergenci. Z tohoto důvodu se používají automatické volby kroku. Na přednášce jsme si ukazovali Armijo podmínku. Při její implementaci začneme s `α = α0` a poté zmenšujeme `α`, dokud není podmínka splněna. Teoretické výsledky ukazují, že nějaké takové `α` bude vždy existovat.
+# Předchozí cvičení ukazuje, že volba délky kroku je trochu magie a špatné volba může vést k pomalé konvergenci nebo dokonce divergenci. Z tohoto důvodu se používají automatické volby kroku. Na přednášce jsme si ukazovali Armijo podmínku. Při její implementaci začneme s `α = α0` a poté zmenšujeme `α`, dokud není podmínka splněna. Teoretické výsledky ukazují, že nějaké takové `α` bude vždy existovat.
 
 function armijo(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6, α0=1, c=1e-4)
     for i in 1:max_iter
@@ -163,7 +162,7 @@ function armijo(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6, α0=1, c=1e-4)
         end
     end
     return x, x_all, res
-end
+end;
 
 # Pusťme nyní optimalizaci s volbu kroku podle Armijo podmínky.
 
@@ -186,12 +185,14 @@ babs = zeros(max_iter)
 babs[1] = a
 for i in 1:max_iter-1
     babs[i+1] = 0.5(babs[i] + a/babs[i])
-end
+end;
 
-# Když vykreslíme rezidua, vidíme, že jdou k nule extrémně rychle.
+# Když vykreslíme rezidua, vidíme, že jdou k nule extrémně rychle. Musíme vybrat pouze kladná rezidua, protože je kleslíme v logaritmické škále.
 
-plot(abs.(babs .- sqrt(a)); yscale=:log10, label="Residual")
+res = abs.(babs .- sqrt(a))
+res = res[res .> 0]
 
+plot(res; yscale=:log10, label="Residual")
 
 # # Newtonova metoda
 
@@ -205,7 +206,7 @@ function newton(grad, hess, x; max_iter=100, ϵ_tol=1e-12)
         end
     end
     return x
-end
+end;
 
 # A poté ji přepíšeme variantou, která vrací  vsechny iterace a residua.
 
@@ -223,7 +224,7 @@ function newton(grad, hess, x; max_iter=100, ϵ_tol=1e-12)
         end
     end
     return x, x_all, res
-end
+end;
 
 # Protože člověk je tvor líný, a nechce se nám znova a znova počítat všechny derivace. Použijeme balík `Zygote`, který za nás derivaci i Hessián spočte.
 
@@ -232,33 +233,35 @@ using Zygote: hessian
 
 f(x) = sin(x[1] + x[2]) + cos(x[1])^2
 g(x) = gradient(f, x)[1]
-h(x) = hessian(f, x)
+h(x) = hessian(f, x);
 
 # Nyní můžeme pustit Newtonovu metody.
 
-x, x_all, res = newton(g, h, x0)
+x, x_all, res = newton(g, h, x0);
 
-# Vidíme konvergenci v třech iteracích.
+# Vidíme konvergenci ve třech iteracích.
 
 plot(res; yscale=:log10, label="Residual")
 
-# Když ale vykreslíme konvergenci, vidíme, že Newtonova metoda konverguje ke stacionárnímu bodu.
+# Když ale vykreslíme konvergenci, vidíme, že Newtonova metoda konverguje k sedlovému bodu.
 
 create_anim("Anim_Newton1.gif", f, x_all, xlim, ylim)
+
+# ![](Anim_Newton1.gif)
 
 # I když je derivace nulová.
 
 g(x)
 
-# Hessián je indefinitní. Toto tedy není bod, ke kterému bychom chtěli konvergovat.
+# Hessián je indefinitní, jak vidíme z jeho jednoho pozitiního a jednoho negativního vlastního čísla.
 
 eigvals(h(x))
 
-# Zkusme start z jiného bodu.
+# Toto tedy není bod, ke kterému bychom chtěli konvergovat. Zkusme start z jiného bodu.
 
 x, x_all, res = newton(g, h, [-0.5; 0.5])
 
-# Dostali jsme chybu, někde v kódu je $\ifnty$. Matice Hessiánu vypadá podezřele.
+# Dostali jsme chybu, jejíž první řádek říká, že někde v kódu je $\infty$. Matice Hessiánu vypadá podezřele.
 
 h([-0.5; 0.5])
 
@@ -275,15 +278,17 @@ plot(res; yscale=:log10, label="Residual")
 
 create_anim("Anim_Newton2.gif", f, x_all, xlim, ylim)
 
+# ![](Anim_Newton2.gif)
+
 # Derivace je nulová.
 
-h(x)
+g(x)
 
 # A Hessián je pozitivně definitní. Jsme konečně v lokálním minimu,
 
 eigvals(h(x))
 
-# Závěrem řekneme, že Newton je velmi rychlá metoda. Pokud konverguje. I pro Newtonovu metodu se zkrácený krok. Toto ale nevyšení problémy s divergencí, když Hessián nemá plnou hodnost.
+# Závěrem řekneme, že Newton je velmi rychlá metoda. Pokud konverguje. I pro Newtonovu metodu se někdy používá zkrácený krok. Toto ale nevyšení problémy s divergencí, když Hessián nemá plnou hodnost.
 
 # # Porovnání metod
 
@@ -291,7 +296,7 @@ eigvals(h(x))
 
 f(x) = exp(-x^2) - 0.5*exp(-(x-1)^2) - 0.5*exp(-(x+1)^2)
 g(x) = gradient(f, x)[1]
-h(x) = hessian(x -> f(x[1]), [x])[1]
+h(x) = hessian(x -> f(x[1]), [x])[1];
 
 # Vykresleme tuto funkci a její první dvě derivace.
 
@@ -302,7 +307,7 @@ plot(xs, [f; g; h], label=["f" "g" "h"])
 
 x0 = 1
 x1, x_all1 = grad_descent(g, x0)
-x2, x_all2 = newton(g, h, x0)
+x2, x_all2 = newton(g, h, x0);
 
 # Dále zadefinujme $f_{\rm neg}(x) = -f(x)$ a pusťme stejnou optimimalizaci.
 
@@ -311,9 +316,9 @@ g_neg(x) = -g(x)
 h_neg(x) = -h(x)
 
 x3, x_all3 = grad_descent(g_neg, x0)
-x4, x_all4 = newton(g_neg, h_neg, x0)
+x4, x_all4 = newton(g_neg, h_neg, x0);
 
-# Nyní vykresleme, kam dokonvergoval gradient descent pto $f$ a pro $f_{\rm neg}$. Vidíme, že ke správným hodnotám.
+# Uvědomme si, že minimalizace $-f$ odpovídá maximalizaci $f$. Nyní vykresleme, kam dokonvergoval gradient descent pto $f$ a pro $f_{\rm neg} = -f$. Vidíme, že ke správným hodnotám.
 
 plot(xs, f; label="f")
 scatter!(x_all1[:], f; label="GD for f")
