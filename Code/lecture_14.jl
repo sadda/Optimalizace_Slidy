@@ -1,12 +1,12 @@
+# # Lekce 14: Nelineární metody nejmenších čtverců 
+
+# Nejdříve načtěme nutné balíčky a funkce z minulé hodiny.
+
 using Random
 using LinearAlgebra
 using Plots
 
 include("utilities.jl")
-
-##################################
-### Funkce z minule prednasky
-##################################
 
 function grad_descent(grad, x; α=1e-1, max_iter=100, ϵ_tol=1e-6)
     res = zeros(max_iter)
@@ -38,42 +38,83 @@ function newton(grad, hess, x; max_iter=100, ϵ_tol=1e-12)
         end
     end
     return x, x_all, res
-end
+end;
 
-##################################
-### Linearni nejmensi ctverce
-##################################
+# # Nejmenší čtverce
 
-## Create and show data
+# Úkolem dnešní hodiny bude nafitovat $n$ dvojic $(x_i, y_i)$ pomocí lineárních a nelineárních funkcí. Data $x_i$ budou rovnoměrně rozdělené na intervalu $[-2,2]$ a budeme uvažovat přesnou závislost $$y_i = \sin x_i - 0.1x_i + 1.$$ Důležité je si uvědomit, že tato funkce je neznámá, a tedy ji nemůže použít pro transformaci dat $x_i$. Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $h(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou hledané parametry. Poté řešíme optimalizační úlohu $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (h(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $h(w;x_i)$ a labelem $y_i$.
+
+# # Lineární nejmenší čtverce
+
+# Vzhledem k tomu, že máme jednorozměrný vstup, pro lineární nejmenší čtverce máme $$h(w;x) = w_1x + w_2$$. Lineární nejmenší čtverce potom mají známý tvar $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (w_1x_i + w_2 - y_i)^2$$.
+
+# Vytvořme nejdříve data a vykreleme je.
 
 n = 1000
 xs = range(-2, 2; length=n)
 ys = sin.(xs) .- 0.1*xs .+ 1
 
+scatter(xs, ys, label="Data", legend=:topleft)
+
+# Nyní zadefinujme funkce se stejným značením jako na přednášce. Nejprve $$g_i(w) = w_1x_i + w_2 - y_i$$ ukazuje chybu při fitu i-tého pozorování. Poté $$f(w) = \frac 1n\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny pozorování. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou musíme použít jiné písmeno, například $w$. Nyní tyto funkce zadefinujeme. Použijeme maticový zápis s maticí `A`. Zároveň spočteme gradienty $f$ i $g$.
+
 A = hcat(xs, ones(n))
-scatter(A[:,1], ys, label="Data", legend=:topleft)
 
-## Prepare functions
+g(w) = A*w .- ys
+g_grad(w) = A
 
-g(x) = A*x .- ys
-g_grad(x) = A
+f(w) = g(w)'*g(w) / (2*length(g(w)))
+f_grad(w) = g_grad(w)'*g(w) / length(g(w));
 
-f(x) = g(x)'*g(x) / (2*length(g(x)))
-f_grad(x) = g_grad(x)'*g(x) / length(g(x))
+# Lineární nejmenší čtverce minimalizují funkci $f$. Vykresleme tedy její vrstevnice. Znovu si uvědomme, že optimalizujeme přes proměnnou $w$.
 
-xlim = range(0, 1; length=31)
-ylim = range(0, 2; length=31)
+w1lim = range(0, 1; length=31)
+w2lim = range(0, 2; length=31)
 
-contourf(xlim, ylim, (x,y) -> f([x,y]); color=:jet)
+contourf(w1lim, w2lim, (w1,w2) -> f([w1;w2]); color=:jet)
 
-## Closed-form solution
+# Lineární nejmenší čtverce mají řešení v uzavřené formě $w=(A^\top A)^{-1}A^\top y$. Když toto řešení spočteme a vykreslíme, není překvapivé, že se nachází v minimum funkce $f$.
 
-x_opt1 = (A'*A) \ (A'*ys)
+w_opt1 = (A'*A) \ (A'*ys)
 
-contourf(xlim, ylim, (x,y) -> f([x,y]); color=:jet)
-scatter!([x_opt1[1]], [x_opt1[2]]; label="Optimum")
+contourf(w1lim, w2lim, (w1,w2) -> f([w1;w2]); color=:jet)
+scatter!([w_opt1[1]], [w_opt1[2]]; label="Optimum")
 
-## Gradient descent
+# # Odbočka k řešení soustavy lineárních čtverců
+
+# Pro řešení jsme použili neznámý zápis `(A'*A) \ (A'*ys)`. Tento příkaz dá stejný výsledek jako `inv(A'*A)*A'*y`. Rozdíl mezi nimi je ten, že zatímco první příkaz používá specializované algoritmy pro řešení rovnic, druhý nejdrív spočte inverzi matice `A` a teprve potom ji vynásobí vektorem `b`.
+
+using SparseArrays 
+
+aux_s = 1000
+
+aux_A1 = sprandn(aux_s, aux_s, 0.001)
+aux_A1 += I
+aux_b = randn(aux_s);
+
+# 
+
+
+aux_A2 = Matrix(aux_A1);
+
+#
+
+using LinearAlgebra
+
+norm(inv(aux_A2)*aux_b - aux_A2\aux_b)
+
+# 
+
+using BenchmarkTools
+
+@btime inv($aux_A2) * $aux_b;
+
+# 
+
+@btime $aux_A2 \ $aux_b;
+
+
+# # ???
 
 x0 = [0;0]
 
@@ -183,3 +224,21 @@ end
 
 plot(xs, ys, label="Data", legend=:topleft)
 plot!(xs, m(xs_row)[:], label="Fit")
+
+
+mimo obor
+
+
+
+
+n = 3000
+
+A = randn(n,n);
+b = randn(n);
+
+using BenchmarkTools
+
+@time A \ b;
+@time inv(A) * b;
+
+
