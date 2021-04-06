@@ -42,21 +42,21 @@ end;
 
 # # Nejmenší čtverce
 
-# Úkolem dnešní hodiny bude nafitovat $n$ dvojic $(x_i, y_i)$ pomocí lineárních a nelineárních funkcí. Data $x_i$ budou rovnoměrně rozdělené na intervalu $[-2,2]$ a budeme uvažovat přesnou závislost $$y_i = \sin x_i - 0.1x_i + 1.$$ Důležité je si uvědomit, že tato funkce je neznámá, a tedy ji nemůže použít pro transformaci dat $x_i$. Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $h(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou hledané parametry. Poté řešíme optimalizační úlohu $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (h(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $h(w;x_i)$ a labelem $y_i$.
+# Úkolem dnešní hodiny bude nafitovat $n$ dvojic vzorků $(x_i, y_i)$ pomocí lineárních a nelineárních funkcí. Data $x_i$ budou rovnoměrně rozdělené na intervalu $[-2,2]$ a budeme uvažovat přesnou závislost $$y_i = \sin x_i - 0.1x_i + 1.$$ Důležité je si uvědomit, že tato funkce je neznámá, a tedy ji nemůžeme použít pro transformaci dat $x_i$. Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $h(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou parametry, které budeme optimalizovat. Poté řešíme optimalizační úlohu $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (h(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $h(w;x_i)$ a labelem $y_i$.
 
 # # Lineární nejmenší čtverce
 
-# Vzhledem k tomu, že máme jednorozměrný vstup, pro lineární nejmenší čtverce máme $$h(w;x) = w_1x + w_2$$. Lineární nejmenší čtverce potom mají známý tvar $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (w_1x_i + w_2 - y_i)^2$$.
+# Vzhledem k tomu, že máme jednorozměrný vstup $x$, pro lineární nejmenší čtverce máme $$h(w;x) = w_1x + w_2.$$ Lineární nejmenší čtverce potom mají známý tvar $$\operatorname{minimalizuj}\qquad \frac {1}{2n}\sum_{i=1}^n (w_1x_i + w_2 - y_i)^2.$$
 
-# Vytvořme nejdříve data a vykreleme je.
+# Vytvořme nejdříve data a vykresleme je.
 
 n = 1000
 xs = range(-2, 2; length=n)
 ys = sin.(xs) .- 0.1*xs .+ 1
 
-scatter(xs, ys, label="Data", legend=:topleft)
+plot(xs, ys, label="Data", legend=:topleft)
 
-# Nyní zadefinujme funkce se stejným značením jako na přednášce. Nejprve $$g_i(w) = w_1x_i + w_2 - y_i$$ ukazuje chybu při fitu i-tého pozorování. Poté $$f(w) = \frac 1n\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny pozorování. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou musíme použít jiné písmeno, například $w$. Nyní tyto funkce zadefinujeme. Použijeme maticový zápis s maticí `A`. Zároveň spočteme gradienty $f$ i $g$.
+# Nyní zadefinujme funkce se stejným značením jako na přednášce. Nejprve $$g_i(w) = w_1x_i + w_2 - y_i$$ ukazuje chybu při fitu i-tého vzorku. Poté $$f(w) = \frac {1}{2n}\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny vzorky. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou musíme použít jiné písmeno, například $w$. Nyní tyto funkce zadefinujeme. Použijeme maticový zápis s maticí $A$. Zároveň spočteme gradienty $f$ i $g$.
 
 A = hcat(xs, ones(n))
 
@@ -64,25 +64,27 @@ g(w) = A*w .- ys
 g_grad(w) = A
 
 f(w) = g(w)'*g(w) / (2*length(g(w)))
-f_grad(w) = g_grad(w)'*g(w) / length(g(w));
+f_grad(w) = g_grad(w)'*g(w) / length(g(w))
+
+f(x::Real,y::Real) = f([x,y]);
 
 # Lineární nejmenší čtverce minimalizují funkci $f$. Vykresleme tedy její vrstevnice. Znovu si uvědomme, že optimalizujeme přes proměnnou $w$.
 
 w1lim = range(0, 1; length=31)
 w2lim = range(0, 2; length=31)
 
-contourf(w1lim, w2lim, (w1,w2) -> f([w1;w2]); color=:jet)
+contourf(w1lim, w2lim, f; color=:jet)
 
 # Lineární nejmenší čtverce mají řešení v uzavřené formě $w=(A^\top A)^{-1}A^\top y$. Když toto řešení spočteme a vykreslíme, není překvapivé, že se nachází v minimum funkce $f$.
 
 w_opt1 = (A'*A) \ (A'*ys)
 
-contourf(w1lim, w2lim, (w1,w2) -> f([w1;w2]); color=:jet)
+contourf(w1lim, w2lim, f; color=:jet)
 scatter!([w_opt1[1]], [w_opt1[2]]; label="Optimum")
 
-# # Odbočka k řešení soustavy lineárních čtverců
+# # Odbočka k řešení soustavy lineárních rovnic
 
-# Pro řešení jsme použili neznámý zápis `(A'*A) \ (A'*ys)`. Tento příkaz dá stejný výsledek jako `inv(A'*A)*A'*y`. Rozdíl mezi nimi je ten, že zatímco první příkaz používá specializované algoritmy pro řešení rovnic, druhý nejdrív spočte inverzi matice `A` a teprve potom ji vynásobí vektorem `b`.
+# Pro řešení jsme použili neznámý zápis `(A'*A) \ (A'*ys)`. Tento příkaz dá stejný výsledek jako `inv(A'*A)*A'*y`. Rozdíl mezi nimi je ten, že zatímco první příkaz používá specializované algoritmy pro řešení rovnic, druhý nejdrív spočte inverzi matice a teprve potom ji vynásobí vektorem. Ukažme nyní, jak se tyto přístupy liší. Vygenerujme náhodnou řídkou matici `aux_A1` a poté ji přetransformujme do husté matice.
 
 using SparseArrays 
 
@@ -90,61 +92,81 @@ aux_s = 1000
 
 aux_A1 = sprandn(aux_s, aux_s, 0.001)
 aux_A1 += I
+aux_A2 = Matrix(aux_A1);
 aux_b = randn(aux_s);
 
-# 
-
-
-aux_A2 = Matrix(aux_A1);
-
-#
+# Následující kód ukazuje, že `inv(aux_A2)*aux_b` a `aux_A2\aux_b` dává stejný výsledek.
 
 using LinearAlgebra
 
 norm(inv(aux_A2)*aux_b - aux_A2\aux_b)
 
-# 
+# Udělejme nyní časové porovnání pomocí balíku `BenchmarkTools`.
 
-using BenchmarkTools
+import BenchmarkTools: @btime
 
+println("Dense matrix based on inv(A)*b")
 @btime inv($aux_A2) * $aux_b;
 
-# 
-
+println("Dense matrix based on A \\ b")
 @btime $aux_A2 \ $aux_b;
 
+println("Sparse matrix based on A \\ b")
+@btime $aux_A1 \ $aux_b;
 
-# # ???
+# Vidíme, že syntaxe `A \ b` je několikrát rychlejší a má menší nároky na paměť. Při použití řídké matice je rozdíl ještě markantnější, neboť `inv(A)` generuje hustou matici a není schopné využít řídkosti.
 
-x0 = [0;0]
+# # Lineární nejmenší čtverce podruhé
 
-x_opt2, x_all2, res2 = grad_descent(f_grad, x0)
+# Z minulé hodiny máme naprogramovaný gradient descent. Pustíme ho tedy stejně jako minule.
 
-scatter(A[:,1], ys, label="Data", legend=:topleft)
-plot!(xs, x -> x_opt2[1]*x + x_opt2[2], label="Fit")
+w0 = [0;0]
 
-create_anim("Anim_NC1.gif", (x,y) -> f([x,y]), x_all2, xlim, ylim)
+w_opt2, w_all2, res2 = grad_descent(f_grad, w0);
 
-## Newton-type methods
+# Dostali jsme optimální parametry, ale zajímá nás predikce. Tu dostaneme jako $w_1x+w_2$. Po vykreslení dostaneme nejlepší lineární aproximaci, která ale není moc dobrá.
 
-f_hess_approx(x,λ) = g_grad(x)'*g_grad(x) / length(g(x)) + λ*Diagonal(ones(length(x)))
+plot(xs, ys, label="Data", legend=:topleft)
+plot!(xs, x -> w_opt2[1]*x + w_opt2[2], label="Fit")
 
-ls_gauss_newton(f_grad, x0) = newton(f_grad, x -> f_hess_approx(x, 0), x0)
-ls_levenberg_marquardt(f_grad, x0, μ) = newton(f_grad, x -> f_hess_approx(x, μ), x0)
+# Použijme opět stejnou funkci jako na minulé hodině a vykresleme konvergenci iterací.
 
-x_opt3, x_all3, res3 = ls_gauss_newton(f_grad, x0)
-x_opt4, x_all4, res4 = ls_levenberg_marquardt(f_grad, x0, 0.5)
+create_anim(f, w_all2, w1lim, w2lim, "Anim_NC1.gif");
+
+# ![](Anim_NC1.gif)
+
+# # Metody založené na Newtonově metodě
+
+# Pro použití Gauss-Newtonovy and Levenberg-Marquardtovy metody je dobré si uvědomit, že obě pracují stejně jako Newtonova metoda, tedy krok je $-A^{-1}\nabla f(x)$ pro nějakou matici $A$. Pro Newtonovu metodu se za $A$ bere Hessián, zatímco pro dvě výše zmíněné metoda to je nějaká jeho aproximace. Není tedy nutné psát novou optimalizační funkci, ale stačí použit již napsanou funkci `newton` se správným vstupem `h` druhých derivací. Tyto derivace jde spočíst následovně:
+
+f_hess_approx(w,λ) = g_grad(w)'*g_grad(w) / length(g(w)) + λ*Diagonal(ones(length(w)));
+
+# Gauss-Newtonova metoda používá `μ=0`, zatímco Levenberg-Marquardtova metoda používá `μ>0`. Poté již stačí zavolat Newtonovu metodu a dostaneme řešení.
+
+w_opt3, w_all3, res3 = newton(f_grad, w -> f_hess_approx(w, 0), w0)
+w_opt4, w_all4, res4 = newton(f_grad, w -> f_hess_approx(w, 0.5), w0);
+
+# Je dobré si uvědomit, že Gauss-Newtonova metoda je přesná Newtonova metoda, neboť druhá derivace `g` je nulová. Vzhledem k tomu, že `f` je kvadratická, pro `w_opt3` dostáváme konvergenci v jedné iteraci. Pro Levenberg-Marquardtovu metodu je konvergence pomalejší. Navíc perturbace Hessiánu změnila superlineární (rychlou) konvergenci na pouhou lineární konvergenci.
 
 plot(res4; yscale=:log10, label="Residual")
-create_anim("Anim_NC2.gif", (x,y) -> f([x,y]), x_all4, xlim, ylim)
 
-## Stochastic gradient descent
+# Nakonec opět vykresleme jednotlivé iterace.
 
-g(x, I) = A[I,:]*x - ys[I] 
-g_grad(x, I) = A[I,:]
+create_anim(f, w_all4, w1lim, w2lim, "Anim_NC2.gif");
 
-f(x, I) = g(x, I)'*g(x, I) / length(g(x, I))
-f_grad(x, I) = g_grad(x, I)'*g(x, I) / length(g(x, I))
+# ![](Anim_NC2.gif)
+
+# # Stochastický gradient descent
+
+# Pro stochastický gradient descent definujme funkce stejně jako v první části přednášky, ale uvažujme pouze vzorky v nějaké indexové množině $I$. To odpovídá tomu, že uvažujeme pouze ty řádky matice $A$, které odpovídají těmto indexům.
+
+g(w, I) = A[I,:]*w - ys[I] 
+g_grad(w, I) = A[I,:]
+
+f(w, I) = g(w, I)'*g(w, I) / (2*length(g(w, I)))
+f_grad(w, I) = g_grad(w, I)'*g(w, I) / length(g(w, I));
+
+# Stochastický gradient descent je stejný jako standardní gradient descent, ale gradient počítáme pouze ze zmenšeného počtu vzorků. Největší výhoda stochastického gradientu je rychlost počítání, neboť se pracuje pouze s malým počtem vzorků.
 
 function stoch_grad_descent(grad, x, n; n_minibatch=8, α=1e-1, max_iter=100)
     res1 = zeros(max_iter)
@@ -158,87 +180,119 @@ function stoch_grad_descent(grad, x, n; n_minibatch=8, α=1e-1, max_iter=100)
         res2[i] = norm(grad(x, 1:n))
     end
     return x, x_all, res1, res2
-end
+end;
 
-x_opt5, x_all5, res5_1, res5_2 = stoch_grad_descent(f_grad, x0, n)
+# Pusťme nyní stochastický gradient descent.
+
+w_opt5, w_all5, res5_1, res5_2 = stoch_grad_descent(f_grad, w0, n);
+
+# Dále pak vykresleme rezidua na minibatchi a na celém souboru. Vidíme, že rezidua na minibatchi velmi skáčou. Důvod je ten, že minibatch je malý, což přidává nestabilitu.
 
 plot(res5_1; yscale=:log10, label="Residual minibatch")
 plot!(res5_2; yscale=:log10, label="Residual true")
-create_anim("Anim_NC3.gif", (x,y) -> f([x,y]), x_all5, xlim, ylim)
 
-##################################
-### NELinearni nejmensi ctverce
-##################################
+# Iterace konvergují zpočátku rychle, ale když se dostanou poblíž řešení, tak začnou skákat. Důvodem je opět malá velikost minibatche. Pro konvergenci by bylo potřeba snižovat délku kroku.
 
-## Non-linear regression (aka neural networks) - gradient descent
+create_anim(f, w_all5, w1lim, w2lim, "Anim_NC3.gif")
+
+# ![](Anim_NC3.gif)
+
+# I když jsme nedokonvergovali, následující obrázek ukazuje, že jsme pořád blízko dobrého řešení.
+
+plot(xs, ys, label="Data", legend=:topleft)
+plot!(xs, x -> w_opt2[1]*x + w_opt2[2], label="Fit: Optimální")
+plot!(xs, x -> w_opt5[1]*x + w_opt5[2], label="Fit: SGD")
+
+# # Nelineární nejmenší čtverce
+
+# Ukážeme si nyní, jak nafitovat onu sinusoidu pomocí jednoduché neuronové sítě. Neuronová síť není nic jiného než nelineární zobrazení s nějakým speciálním předpisem. Načtěme nejdříve nutné balíky.
 
 using Flux
 using Flux: mse
 using Base.Iterators: partition
 
+# Vzhledem k tomu, že balík Flux vyžaduje, aby poslední dimenze vstupů byly vzorky, tak musíme vstupná data transformovat do řádkového vektoru. Zároveň je kvůli rychlostem výpočtu konvertujeme z `Float64` do `Float32`.
+
 xs_row = Float32.(reshape(xs,1,:))
-ys_row = Float32.(reshape(ys,1,:))
+ys_row = Float32.(reshape(ys,1,:));
+
+# Nyní zkonstruujme jednoduchou neuronovou síť s dvěma skrytými vrstvami.
 
 n_hidden = 10
 m = Chain(
     Dense(1, n_hidden, relu),
     Dense(n_hidden, n_hidden, relu),
     Dense(n_hidden, 1),
-)
+);
 
-plot(xs, m(xs_row)[:], label="Initial neural network")
+# Zadefinujme účelovou funkci jako mean square error, vytáhněme ze sítě parametry (které na začátku byly označeny jako $w$) a jako optimalizátor použijme gradient descent.
 
 loss(x, y) = mse(m(x), y)
-
 ps = params(m)
-opt = Descent(1e-1)
-@time for i in 1:100
+opt = Descent(1e-1);
+
+# Nyní udělejme 100 iterací gradient descentu. Všimněme si, že Flux automaticky počítá derivace a provádí update parametrů.
+
+max_iter = 100
+
+Ls1 = zeros(max_iter)
+for i in 1:max_iter
     gs = gradient(ps) do
         loss(xs_row, ys_row)
     end
 
     Flux.update!(opt, ps, gs)
-    println(loss(xs_row, ys_row))
+    Ls1[i] = loss(xs_row, ys_row)
 end
+
+# Po vykreslení vidíme, že máme docela dobrý fit.
 
 plot(xs, ys, label="Data", legend=:topleft)
 plot!(xs, m(xs_row)[:], label="Fit")
 
-## Non-linear regression (aka neural networks) - stochastic gradient descent
+# Nyní udělejme to samé, ale se stochastickým gradient descentem. Protože model `m` si v sobě nese optimalizované parametry, tak ho nejdříve znovu inicializujme.
 
 m = Chain(
     Dense(1, n_hidden, relu),
     Dense(n_hidden, n_hidden, relu),
     Dense(n_hidden, 1),
-)
+);
+
+# Nyní udělejme iterátor, který všechny vzorky rozdělí do minibachů, kde každý minibatch má velikost 10 vzorků.
 
 batch_size = 10
 batches_train = map(partition(randperm(size(ys_row, 2)), batch_size)) do inds
     return (xs_row[:, inds], ys_row[:, inds])
+end;
+
+# Pusťme stochastický gradient descent na 100 epoch. V jedné epoše by se optimalizátor měl podívat na každý vzorek právě jednou. Vzhledem k tomu, že máme 1000 dat a minibatch je velikosti 10, tak za 100 epoch uděláme 10000 gradientních updatů. Stochastický gradient tedy za stejný čas udělá daleko více updatů než gradient descent. I když jsou tyto updaty nepřesné, tak rychlostní bonus je většinou tak výrazný, že je dobré stochastickou verzi uvažovat.
+
+Ls2 = zeros(max_iter)
+for i in 1:max_iter
+    Flux.train!(loss, params(m), batches_train, opt)
+    Ls2[i] = loss(xs_row, ys_row)
 end
 
-@time for _ in 1:100
-    Flux.train!(loss, params(m), batches_train, opt)
-    println(loss(xs_row, ys_row))
-end
+# Porovnejme nyní běžný a stochastický gradient descent. Vidíme, že stochastická varianta má výrazně menší ztrátovou funkci.
+
+plot(Ls1, label="GD", xlabel="Iterace", ylabel="Ztrátová funkce", legend=:topleft, yscale=:log10)
+plot!(Ls2, label="SGD")
+
+# Když vykreslíme predikci, dsotáváme skoro perfektní fit. Do odpovídá ne úplně běžné situaci, že stochastický gradient descent dokonvergoval do globálního minima.
 
 plot(xs, ys, label="Data", legend=:topleft)
 plot!(xs, m(xs_row)[:], label="Fit")
 
+# Zdálo by se, že všechno je růžové, ale co se stane, když vykreslíme fit mimo obor dat?
 
-mimo obor
+xs_ext = -10:0.01:10
+ys_ext = sin.(xs_ext) .- 0.1*xs_ext .+ 1
+
+plot(xs_ext, ys_ext, label="Data", legend=:topleft)
+plot!(xs_ext, m(Float32.(reshape(xs_ext,1,:)))[:], label="Fit")
+
+# Není vůbec dobrý. Toto je ale vlastnost všech modelů. Když učíme model na datech z intervalu $[-2,2]$ a pak ho testujeme mimo tento interval, nemůžeme očekávat, že tam bude fungovat dobře.
 
 
-
-
-n = 3000
-
-A = randn(n,n);
-b = randn(n);
-
-using BenchmarkTools
-
-@time A \ b;
-@time inv(A) * b;
 
 
