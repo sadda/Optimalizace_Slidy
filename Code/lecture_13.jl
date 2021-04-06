@@ -87,7 +87,7 @@ end;
 
 x0 = [0.; -1]
 x, x_all, res = grad_descent(g, x0)
-create_anim("Anim_GD1.gif", f, x_all, xlim, ylim);
+create_anim(f, x_all, xlim, ylim, "Anim_GD1.gif");
 
 # ![](Anim_GD1.gif)
 
@@ -101,13 +101,13 @@ plot(res1; yscale=:log10, label="Residual")
 # Zkousme vykreslit, co se stane, když zvolíme krok $\alpha$ postupně $0.01$, $1$ a $10$.
 
 x2, x_all2, res2 = grad_descent(g, x0; α=1e-2)
-create_anim("Anim_GD2.gif", f, x_all2, xlim, ylim)
+create_anim(f, x_all2, xlim, ylim, "Anim_GD2.gif")
 
 x3, x_all3, res3 = grad_descent(g, x0; α=1e0)
-create_anim("Anim_GD3.gif", f, x_all3, xlim, ylim)
+create_anim(f, x_all3, xlim, ylim, "Anim_GD3.gif")
 
 x4, x_all4, res4 = grad_descent(g, x0; α=1e1)
-create_anim("Anim_GD4.gif", f, x_all4, xlim, ylim);
+create_anim(f, x_all4, xlim, ylim, "Anim_GD4.gif");
 
 # ![](Anim_GD2.gif)
 
@@ -171,7 +171,7 @@ plot(res5; yscale=:log10, label="Residual")
 
 # Konvergence je rychlá. K tomu, abychom se dostali na stejný reziduál nyní potřebujeme jenom 45 iterací.
 
-create_anim("Anim_GD5.gif", f, x_all5, xlim, ylim)
+create_anim(f, x_all5, xlim, ylim, "Anim_GD5.gif")
 
 # ![](Anim_GD5.gif)
 
@@ -245,7 +245,7 @@ plot(res; yscale=:log10, label="Residual")
 
 # Když ale vykreslíme konvergenci, vidíme, že Newtonova metoda konverguje k sedlovému bodu.
 
-create_anim("Anim_Newton1.gif", f, x_all, xlim, ylim)
+create_anim(f, x_all, xlim, ylim, "Anim_Newton1.gif")
 
 # ![](Anim_Newton1.gif)
 
@@ -276,7 +276,7 @@ plot(res; yscale=:log10, label="Residual")
 
 # Tentokrát to vypadá, že jsme dokonvergovali ke správnému bodu.
 
-create_anim("Anim_Newton2.gif", f, x_all, xlim, ylim)
+create_anim(f, x_all, xlim, ylim, "Anim_Newton2.gif")
 
 # ![](Anim_Newton2.gif)
 
