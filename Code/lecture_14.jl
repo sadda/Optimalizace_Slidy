@@ -50,9 +50,11 @@ end;
 
 # Vytvořme nejdříve data a vykresleme je.
 
+h_true(x) = sin(x) - 0.1x + 1
+
 n = 1000
 xs = range(-2, 2; length=n)
-ys = sin.(xs) .- 0.1*xs .+ 1
+ys = h_true.(xs)
 
 plot(xs, ys, label="Data", legend=:topleft)
 
@@ -286,9 +288,8 @@ plot!(xs, m(xs_row)[:], label="Fit")
 # Zdálo by se, že všechno je růžové, ale co se stane, když vykreslíme fit mimo obor dat?
 
 xs_ext = -10:0.01:10
-ys_ext = sin.(xs_ext) .- 0.1*xs_ext .+ 1
 
-plot(xs_ext, ys_ext, label="Data", legend=:topleft)
+plot(xs_ext, h_true, label="Data", legend=:topleft)
 plot!(xs_ext, m(Float32.(reshape(xs_ext,1,:)))[:], label="Fit")
 
 # Není vůbec dobrý. Toto je ale vlastnost všech modelů. Když učíme model na datech z intervalu $[-2,2]$ a pak ho testujeme mimo tento interval, nemůžeme očekávat, že tam bude fungovat dobře.
