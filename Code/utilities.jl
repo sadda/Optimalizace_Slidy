@@ -6,6 +6,8 @@ function create_anim(
     file_name = joinpath(pwd(), randstring(12) * ".gif");
     xbounds = xlims,
     ybounds = ylims,
+    fbounds = nothing,
+    tbounds = nothing,
     fps = 15,
 )
     xs = length(xlims) > 2 ? range(xlims[1], xlims[end]; length = 100) : range(xlims...; length = 100)
@@ -18,6 +20,11 @@ function create_anim(
         y_rect = [ybounds[1]; ybounds[1]; ybounds[2]; ybounds[2]; ybounds[1]]
 
         plot!(x_rect, y_rect; line = (2, :dash, :red), label="")
+    end
+
+    if !isnothing(fbounds)
+        xy_plot = hcat(fbounds.(tbounds[:])...)        
+        plot!(xy_plot[1,:], xy_plot[2,:]; line = (2, :dash, :red), label="")
     end
 
     # add an empty plot
