@@ -52,9 +52,9 @@ ys = h_true.(xs)
 
 plot(xs, ys, label="Data", legend=:topleft)
 
-# Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $\operatorname{predict}(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou parametry, které budeme optimalizovat. Poté řešíme optimalizační úlohu $$\operatorname{minimalizuj}_w\qquad \frac{1}{2n}\sum_{i=1}^n (\operatorname{predict}(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $\operatorname{predict}(w;x_i)$ a labelem $y_i$.
+# Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $\text{predict}(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou parametry, které budeme optimalizovat. Poté řešíme optimalizační úlohu $$\text{minimalizuj}_w\qquad \frac{1}{2n}\sum_{i=1}^n (\text{predict}(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $\text{predict}(w;x_i)$ a labelem $y_i$.
 
-# Nejprve zadefinujme nějakou obecnou predikční funkci $\operatorname{predict}$, která se bude snažit aproximovat $h_{\rm true}$. Funkce $\operatorname{predict}$ samozřejmě závisí na datech $x$, ale zároveň musí záviset na nějakých parametrech $w$, která budeme trénovat. Zadefinujeme dvě predikční funkce, lineární $$\operatorname{predict}(w,x)=w_1x+w_2$$ a nelineární $$\operatorname{predict}(w,x)=w_1\sin w_2x + w_3\cos w_4x + w_5x+ w_6.$$ První povede na lineární nejmenší čtverce, což se na přednášce dělalo několik týdnů zpátky. Zadefinujme tyto dvě funkce a spočtěme jejich derivace.
+# Nejprve zadefinujme nějakou obecnou predikční funkci $\text{predict}$, která se bude snažit aproximovat $h_{\rm true}$. Funkce $\text{predict}$ samozřejmě závisí na datech $x$, ale zároveň musí záviset na nějakých parametrech $w$, která budeme trénovat. Zadefinujeme dvě predikční funkce, lineární $$\text{predict}(w,x)=w_1x+w_2$$ a nelineární $$\text{predict}(w,x)=w_1\sin w_2x + w_3\cos w_4x + w_5x+ w_6.$$ První povede na lineární nejmenší čtverce, což se na přednášce dělalo několik týdnů zpátky. Zadefinujme tyto dvě funkce a spočtěme jejich derivace.
 
 predict_lin(w,x) = w[1]*x + w[2]
 predict_lin_grad(w,x) = [x 1]
@@ -62,7 +62,7 @@ predict_lin_grad(w,x) = [x 1]
 predict_nonlin(w,x) = w[1]*sin(w[2]*x) + w[3]*cos(w[4]*x) + w[5]*x + w[6]
 predict_nonlin_grad(w,x) = [sin(w[2]*x) x*w[1]*cos(w[2]*x) cos(w[4]*x) -x*w[3]*sin(w[4]*x) x 1];
 
-# Nyní zadefinujme funkce se stejným značením jako na přednášce. Protože $$g_i(w) = \operatorname{predict}(w,x_i) - y_i$$ ukazuje chybu při fitu i-tého vzorku, $$f(w) = \frac {1}{2n}\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny vzorky. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou jsme použili písmeno $w$. Nyní tyto funkce zadefinujeme. Zároveň spočteme gradienty $f$ i $g$.
+# Nyní zadefinujme funkce se stejným značením jako na přednášce. Protože $$g_i(w) = \text{predict}(w,x_i) - y_i$$ ukazuje chybu při fitu i-tého vzorku, $$f(w) = \frac {1}{2n}\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny vzorky. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou jsme použili písmeno $w$. Nyní tyto funkce zadefinujeme. Zároveň spočteme gradienty $f$ i $g$.
 
 g(w) = [predict(w,x) - y for (x,y) in zip(xs,ys)]
 g_grad(w) = vcat([predict_grad(w,x) for x in xs]...)
@@ -72,7 +72,7 @@ f_grad(w) = g_grad(w)'*g(w) / length(g(w))
 
 f(x::Real,y::Real) = f([x,y]);
 
-# V lineárních i nelineárních čtvercích chceme minimalizovat funkci $f$ a oba přístupy se liší pouze tím, jak je definovaná funkce $\operatorname{predict}$.
+# V lineárních i nelineárních čtvercích chceme minimalizovat funkci $f$ a oba přístupy se liší pouze tím, jak je definovaná funkce $\text{predict}$.
 
 
 
