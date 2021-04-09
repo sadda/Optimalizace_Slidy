@@ -42,13 +42,7 @@ end;
 
 # # Nejmenší čtverce
 
-# Úkolem dnešní hodiny bude nafitovat $n$ dvojic vzorků $(x_i, y_i)$ pomocí lineárních a nelineárních funkcí. Data $x_i$ budou rovnoměrně rozdělené na intervalu $[-2,2]$ a budeme uvažovat přesnou závislost $$y_i = \sin x_i - 0.1x_i + 1.$$ Důležité je si uvědomit, že tato funkce je neznámá, a tedy ji nemůžeme použít pro transformaci dat $x_i$. Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $h(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou parametry, které budeme optimalizovat. Poté řešíme optimalizační úlohu $$\operatorname{minimalizuj}\qquad \frac 1n\sum_{i=1}^n (h(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $h(w;x_i)$ a labelem $y_i$.
-
-# # Lineární nejmenší čtverce
-
-# Vzhledem k tomu, že máme jednorozměrný vstup $x$, pro lineární nejmenší čtverce máme $$h(w;x) = w_1x + w_2.$$ Lineární nejmenší čtverce potom mají známý tvar $$\operatorname{minimalizuj}\qquad \frac {1}{2n}\sum_{i=1}^n (w_1x_i + w_2 - y_i)^2.$$
-
-# Vytvořme nejdříve data a vykresleme je.
+# Úkolem dnešní hodiny bude nafitovat $n$ dvojic vzorků $(x_i, y_i)$ pomocí lineárních a nelineárních funkcí. Data $x_i$ budou rovnoměrně rozdělené na intervalu $[-2,2]$ a budeme uvažovat přesnou závislost $$y_i = h_{\rm true}(x_i) = \sin x_i - 0.1x_i + 1.$$ Důležité je si uvědomit, že tato funkce je neznámá, a tedy ji nemůžeme použít pro transformaci dat $x_i$. Vytvořme nejdříve data a vykresleme je.
 
 h_true(x) = sin(x) - 0.1x + 1
 
@@ -58,17 +52,36 @@ ys = h_true.(xs)
 
 plot(xs, ys, label="Data", legend=:topleft)
 
-# Nyní zadefinujme funkce se stejným značením jako na přednášce. Nejprve $$g_i(w) = w_1x_i + w_2 - y_i$$ ukazuje chybu při fitu i-tého vzorku. Poté $$f(w) = \frac {1}{2n}\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny vzorky. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou musíme použít jiné písmeno, například $w$. Nyní tyto funkce zadefinujeme. Použijeme maticový zápis s maticí $A$. Zároveň spočteme gradienty $f$ i $g$.
+# Při řešení se parametrizuje prostor hledaných predikcí pomocí nějaké funkce $\text{predict}(w;x)$. Zde je důležité si uvědomit rozdíl mezi parametry: zatímco $x$ jsou vstupní data, $w$ jsou parametry, které budeme optimalizovat. Poté řešíme optimalizační úlohu $$\text{minimalizuj}_w\qquad \frac{1}{2n}\sum_{i=1}^n (\text{predict}(w;x_i) - y_i)^2$$ přes všechny možné parametry $w$. Chceme tedy minimalizovat vzdálenost mezi predikcí $\text{predict}(w;x_i)$ a labelem $y_i$.
 
-A = hcat(xs, ones(n))
+# Nejprve zadefinujme nějakou obecnou predikční funkci $\text{predict}$, která se bude snažit aproximovat $h_{\rm true}$. Funkce $\text{predict}$ samozřejmě závisí na datech $x$, ale zároveň musí záviset na nějakých parametrech $w$, která budeme trénovat. Zadefinujeme dvě predikční funkce, lineární $$\text{predict}(w,x)=w_1x+w_2$$ a nelineární $$\text{predict}(w,x)=w_1\sin w_2x + w_3\cos w_4x + w_5x+ w_6.$$ První povede na lineární nejmenší čtverce, což se na přednášce dělalo několik týdnů zpátky. Zadefinujme tyto dvě funkce a spočtěme jejich derivace.
 
-g(w) = A*w .- ys
-g_grad(w) = A
+predict_lin(w,x) = w[1]*x + w[2]
+predict_lin_grad(w,x) = [x 1]
+
+predict_nonlin(w,x) = w[1]*sin(w[2]*x) + w[3]*cos(w[4]*x) + w[5]*x + w[6]
+predict_nonlin_grad(w,x) = [sin(w[2]*x) x*w[1]*cos(w[2]*x) cos(w[4]*x) -x*w[3]*sin(w[4]*x) x 1];
+
+# Nyní zadefinujme funkce se stejným značením jako na přednášce. Protože $$g_i(w) = \text{predict}(w,x_i) - y_i$$ ukazuje chybu při fitu i-tého vzorku, $$f(w) = \frac {1}{2n}\sum_{i=1}^n g_i(w)^2$$ ukazuje průměrnou kvadratickou chybu přes všechny vzorky. Je důležité si uvědomit, že proměnná $x$ už označuje vstupní data, a tedy pro optimalizovanou proměnnou jsme použili písmeno $w$. Nyní tyto funkce zadefinujeme. Zároveň spočteme gradienty $f$ i $g$.
+
+g(w) = [predict(w,x) - y for (x,y) in zip(xs,ys)]
+g_grad(w) = vcat([predict_grad(w,x) for x in xs]...)
 
 f(w) = g(w)'*g(w) / (2*length(g(w)))
 f_grad(w) = g_grad(w)'*g(w) / length(g(w))
 
 f(x::Real,y::Real) = f([x,y]);
+
+# V lineárních i nelineárních čtvercích chceme minimalizovat funkci $f$ a oba přístupy se liší pouze tím, jak je definovaná funkce $\text{predict}$.
+
+
+
+# # Lineární nejmenší čtverce
+
+# Pro lineární nejmenší čtverce definujme lineární predikci.
+
+predict = predict_lin
+predict_grad = predict_lin_grad;
 
 # Lineární nejmenší čtverce minimalizují funkci $f$. Vykresleme tedy její vrstevnice. Znovu si uvědomme, že optimalizujeme přes proměnnou $w$.
 
@@ -79,46 +92,13 @@ contourf(w1lim, w2lim, f; color=:jet)
 
 # Lineární nejmenší čtverce mají řešení v uzavřené formě $w=(A^\top A)^{-1}A^\top y$. Když toto řešení spočteme a vykreslíme, není překvapivé, že se nachází v minimum funkce $f$.
 
+A = hcat(xs, ones(n))
 w_opt1 = (A'*A) \ (A'*ys)
 
 contourf(w1lim, w2lim, f; color=:jet)
 scatter!([w_opt1[1]], [w_opt1[2]]; label="Optimum")
 
-# # Odbočka k řešení soustavy lineárních rovnic
-
-# Pro řešení jsme použili neznámý zápis `(A'*A) \ (A'*ys)`. Tento příkaz dá stejný výsledek jako `inv(A'*A)*A'*y`. Rozdíl mezi nimi je ten, že zatímco první příkaz používá specializované algoritmy pro řešení rovnic, druhý nejdrív spočte inverzi matice a teprve potom ji vynásobí vektorem. Ukažme nyní, jak se tyto přístupy liší. Vygenerujme náhodnou řídkou matici `aux_A1` a poté ji přetransformujme do husté matice.
-
-using SparseArrays 
-
-aux_s = 1000
-
-aux_A1 = sprandn(aux_s, aux_s, 0.001)
-aux_A1 += I
-aux_A2 = Matrix(aux_A1);
-aux_b = randn(aux_s);
-
-# Následující kód ukazuje, že `inv(aux_A2)*aux_b` a `aux_A2\aux_b` dává stejný výsledek.
-
-using LinearAlgebra
-
-norm(inv(aux_A2)*aux_b - aux_A2\aux_b)
-
-# Udělejme nyní časové porovnání pomocí balíku `BenchmarkTools`.
-
-import BenchmarkTools: @btime
-
-println("Dense matrix based on inv(A)*b")
-@btime inv($aux_A2) * $aux_b;
-
-println("Dense matrix based on A \\ b")
-@btime $aux_A2 \ $aux_b;
-
-println("Sparse matrix based on A \\ b")
-@btime $aux_A1 \ $aux_b;
-
-# Vidíme, že syntaxe `A \ b` je několikrát rychlejší a má menší nároky na paměť. Při použití řídké matice je rozdíl ještě markantnější, neboť `inv(A)` generuje hustou matici a není schopné využít řídkosti.
-
-# # Lineární nejmenší čtverce podruhé
+# Pro řešení jsme použili neznámý zápis `(A'*A) \ (A'*ys)`. Tento příkaz dá stejný výsledek jako `inv(A'*A)*A'*y`. Rozdíl mezi nimi je ten, že zatímco první příkaz používá specializované algoritmy pro řešení rovnic, druhý nejdrív spočte inverzi matice a teprve potom ji vynásobí vektorem. Tyto rozdíly budeme více komentuje na konci souboru.
 
 # Z minulé hodiny máme naprogramovaný gradient descent. Pustíme ho tedy stejně jako minule.
 
@@ -129,7 +109,7 @@ w_opt2, w_all2, res2 = grad_descent(f_grad, w0);
 # Dostali jsme optimální parametry, ale zajímá nás predikce. Tu dostaneme jako $w_1x+w_2$. Po vykreslení dostaneme nejlepší lineární aproximaci, která ale není moc dobrá.
 
 plot(xs, ys, label="Data", legend=:topleft)
-plot!(xs, x -> w_opt2[1]*x + w_opt2[2], label="Fit")
+plot!(xs, x -> predict(w_opt2, x), label="Fit")
 
 # Použijme opět stejnou funkci jako na minulé hodině a vykresleme konvergenci iterací.
 
@@ -202,12 +182,30 @@ create_anim(f, w_all5, w1lim, w2lim, "Anim_NC3.gif")
 # I když jsme nedokonvergovali, následující obrázek ukazuje, že jsme pořád blízko dobrého řešení.
 
 plot(xs, ys, label="Data", legend=:topleft)
-plot!(xs, x -> w_opt2[1]*x + w_opt2[2], label="Fit: Optimální")
-plot!(xs, x -> w_opt5[1]*x + w_opt5[2], label="Fit: SGD")
+plot!(xs, x -> predict(w_opt2, x), label="Fit: Optimální")
+plot!(xs, x -> predict(w_opt5, x), label="Fit: SGD")
 
 # # Nelineární nejmenší čtverce
 
-# Ukážeme si nyní, jak nafitovat onu sinusoidu pomocí jednoduché neuronové sítě. Neuronová síť není nic jiného než nelineární zobrazení s nějakým speciálním předpisem. Načtěme nejdříve nutné balíky.
+# Nyní aktivujme nelineární predikci.
+
+predict = predict_nonlin
+predict_grad = predict_nonlin_grad;
+
+# Zvolme počáteční bod jedniček a stejně jako v lineárním případě pusťme Levenberg-Marquardtovu metodu s parameterem $\lambda=0.001$
+
+w0 = ones(6)
+
+w_opt6, w_all6, res6 = newton(f_grad, w -> f_hess_approx(w, 0.001), w0);
+
+# Po zaokrouhlední jsme dostali predikční funkci $$0.99\sin(1x) + 0.78\cos(0x) - 0.1x + 0.22 = 0.99\sin(x) - 0.1x + 1,$$ což je skoro perfektní fit. Vykresleme nyní tento fit. Data a fit jsou skoro identické.
+
+plot(xs, ys, label="Data", legend=:topleft)
+plot!(xs, x -> predict(w_opt6, x), label="Fit")
+
+# # Neuronové sítě
+
+# Nevýhoda předchozího přístupu je, že musíme přesně parametrizovat funkci `predict`. Ukážeme si nyní, jak nafitovat onu sinusoidu pomocí jednoduché neuronové sítě, kde tato parametrizace není nutná. Neuronová síť není nic jiného než nelineární zobrazení s nějakým speciálním předpisem. Načtěme nejdříve nutné balíky.
 
 using Flux
 using Flux: mse
@@ -283,17 +281,52 @@ plot!(Ls2, label="SGD")
 # Když vykreslíme predikci, dsotáváme skoro perfektní fit. Do odpovídá ne úplně běžné situaci, že stochastický gradient descent dokonvergoval do globálního minima.
 
 plot(xs, ys, label="Data", legend=:topleft)
-plot!(xs, m(xs_row)[:], label="Fit")
+plot!(xs, x -> predict(w_opt6,x), label="Fit nonlinear")
+plot!(xs, m(xs_row)[:], label="Fit neural")
 
 # Zdálo by se, že všechno je růžové, ale co se stane, když vykreslíme fit mimo obor dat?
 
 xs_ext = -10:0.01:10
 
 plot(xs_ext, h_true, label="Data", legend=:topleft)
-plot!(xs_ext, m(Float32.(reshape(xs_ext,1,:)))[:], label="Fit")
+plot!(xs_ext, x -> predict(w_opt6,x), label="Fit nonlinear")
+plot!(xs_ext, m(Float32.(reshape(xs_ext,1,:)))[:], label="Fit neural")
 
-# Není vůbec dobrý. Toto je ale vlastnost všech modelů. Když učíme model na datech z intervalu $[-2,2]$ a pak ho testujeme mimo tento interval, nemůžeme očekávat, že tam bude fungovat dobře.
+# Není vůbec dobrý. Toto je ale vlastnost všech modelů. Když učíme model na datech z intervalu $[-2,2]$ a pak ho testujeme mimo tento interval, nemůžeme očekávat, že tam bude fungovat dobře. Na drunou stranu fit pomocí parametrizované funkce je pořád dobrý.
 
 
+# # Řešení soustavy lineárních rovnic
+
+# Vraťme se nyní k tomu, jak se od sebe liší zápisy `inv(A)*b` a `A\b`. Vygenerujme náhodnou řídkou matici `aux_A1` a poté ji přetransformujme do husté matice.
+
+using SparseArrays 
+
+aux_s = 1000
+
+aux_A1 = sprandn(aux_s, aux_s, 0.001)
+aux_A1 += I
+aux_A2 = Matrix(aux_A1);
+aux_b = randn(aux_s);
+
+# Následující kód ukazuje, že `inv(aux_A2)*aux_b` a `aux_A2\aux_b` dává stejný výsledek.
+
+using LinearAlgebra
+
+norm(inv(aux_A2)*aux_b - aux_A2\aux_b)
+
+# Udělejme nyní časové porovnání pomocí balíku `BenchmarkTools`.
+
+import BenchmarkTools: @btime
+
+println("Dense matrix based on inv(A)*b")
+@btime inv($aux_A2) * $aux_b;
+
+println("Dense matrix based on A \\ b")
+@btime $aux_A2 \ $aux_b;
+
+println("Sparse matrix based on A \\ b")
+@btime $aux_A1 \ $aux_b;
+
+# Vidíme, že syntaxe `A \ b` je několikrát rychlejší a má menší nároky na paměť. Při použití řídké matice je rozdíl ještě markantnější, neboť `inv(A)` generuje hustou matici a není schopné využít řídkosti.
 
 
