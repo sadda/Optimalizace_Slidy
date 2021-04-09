@@ -1,4 +1,4 @@
-# # Lekce 16: Úlohy s omezenémi 
+# # Lekce 16: Úlohy s omezeními 
 
 # Nejdříve načtěme nutné balíčky.
 
@@ -7,7 +7,7 @@ using LinearAlgebra
 using Zygote
 using Zygote: hessian
 
-include("utilities.jl")
+include("utilities.jl");
 
 # Stejně jako v jedné z předchozích hodin uvažujme funkci $$f(x_1,x_2) = \sin(x_1+x_2) + \cos^2(x_1).$$ Definujme ji a spočtěme její derivaci a Hessián. Zároveň určeme limity pro vykreslování.
 
@@ -18,11 +18,11 @@ h(x) = hessian(f, x)
 f(x1,x2) = f([x1;x2])
 
 xlims = (-3, 1)
-ylims = (-2, 1)
+ylims = (-2, 1);
 
 # # Projektované gradienty
 
-# Projecktované gradienty fungují úplně stejně jako klasický gradient descent, ale po každé iteraci se bod projektuje na množinu přípustných řešení. Funkce `optim` vrací iterace `xs` po projekci (na množině přípustných řešení) a iterace `ys` po gradientním kroku (potenciálně mimo množinu přípustných řešení).
+# Projektované gradienty fungují úplně stejně jako klasický gradient descent, ale po každé iteraci se bod projektuje na množinu přípustných řešení. Funkce `optim` vrací iterace `xs` po projekci (na množině přípustných řešení) a iterace `ys` po gradientním kroku (potenciálně mimo množinu přípustných řešení).
 
 function optim(f, g, P, x, α; max_iter=100)
     xs = zeros(length(x), max_iter+1)
@@ -33,15 +33,15 @@ function optim(f, g, P, x, α; max_iter=100)
         xs[:,i+1] = P(ys[:,i])
     end
     return xs, ys
-end
+end;
 
 # Zaveďme ještě jednu funkci, která výstupy funkce `optim` dá za sebe. Tuto funkci budeme používat pouze pro vykreslování.
 
-merge_iterations(xs, ys) = hcat(reshape([xs[:,1:end-1]; ys][:], 2, :), xs[:,end])
+merge_iterations(xs, ys) = hcat(reshape([xs[:,1:end-1]; ys][:], 2, :), xs[:,end]);
 
 # V prvním případě budeme minimalizovat funkci $f$ ma množině $[-1,0]^2$. Pro takovýto box se dá projekce spočíst po souřadnicích.
 
-P(x, x_min, x_max) = min.(max.(x, x_min), x_max)
+P(x, x_min, x_max) = min.(max.(x, x_min), x_max);
 
 # Nyní pusťme optimalizaci.
 
@@ -55,9 +55,9 @@ create_anim(f, xs, xlims, ylims, "Anim_PGD1.gif";
     ybounds=(x_min[2], x_max[2]),
 )
 
-# !()[Anim_PGD1.gif]
+# ![](Anim_PGD1.gif)
 
-# Vidíme, že optimalizace skočí na přípustnou množinu a jede skoro celou po hranici. Když vykreslíme obě iterace, vidíme, že gradient iterace odnese mimo přípustnou množinu, ale projekce je vrátí zpět.
+# Vidíme, že optimalizace jede skoro celou dobu po hranici přípustné množiny. Když vykreslíme oba typy iterací, vidíme, že gradient iterace odnese mimo přípustnou množinu, ale projekce je vrátí zpět.
 
 xys = merge_iterations(xs, ys)
 
@@ -66,19 +66,19 @@ create_anim(f, xys, xlims, ylims, "Anim_PGD2.gif";
     ybounds=(x_min[2], x_max[2]),
 )
 
-# !()[Anim_PGD2.gif]
+# ![](Anim_PGD2.gif)
 
 # Minimalizujme nyní stejnou funkci na kružnici se středem $c=(-1, 0)$ a poloměrem $r=1$. Projekce pouze znormuje vzdálenost bodu $x$ od středu kružnice $c$. Pro vykreslení přidejme ještě funkce na parametrizaci kružnice.
 
 P(x, c, r) = c + r*(x - c)/norm(x - c)
 
-tbounds = 0:0.001:2π
-fbounds(t,c,r) = c .+ r*[sin(t); cos(t)]
-
-# Pusťme optimalizaci stejným stylem-
-
 c = [-1; 0]
 r = 1
+
+tbounds = 0:0.001:2π
+fbounds(t,c,r) = c .+ r*[sin(t); cos(t)];
+
+# Pusťme optimalizaci stejným stylem.
 
 xs, ys = optim(f, g, x -> P(x,c,r), [0;-1], 0.1)
 
@@ -94,9 +94,9 @@ create_anim(f, xys, xlims, ylims, "Anim_PGD4.gif";
     fbounds=t->fbounds(t,c,r),
 )
 
-# !()[Anim_PGD3.gif]
+# ![](Anim_PGD3.gif)
 
-# !()[Anim_PGD4.gif]
+# ![](Anim_PGD4.gif)
 
 # Vidíme podobné výsledky jako v případě boxu. Dostali jsme se na kružnici, po které jsme se následně pohybovali. Vypišme nyní podíl gradienty účelové funcce a omezení. Protože omezení jde napsat jako $\frac12(x-c)^2 - \frac12r^2=0$, jeho gradient je $x-c$.
 
@@ -105,12 +105,12 @@ grad2 = xs[:,end] - c
 
 grad1 ./ grad2
 
-# Vzhledem k tomu, že tento podíl je (přibližně) stejný v obou složkách, dostali jsme stacionární bod. Není těžké ukázat, že toto číslo se rovná laGrangeovu multiplikátoru.
+# Vzhledem k tomu, že tento podíl je (přibližně) stejný v obou složkách, dostali jsme stacionární bod. Není těžké ukázat, že toto číslo se rovná lagrangeovu multiplikátoru.
 
 
 # # Sequential quadratic programming (SQP)
 
-# Naprogramujme nyní jednoduchou verzi SQP.
+# Naprogramujme nyní jednoduchou verzi SQP fungující pouze pro jedno omezení.
 
 function sqp(f, f_grad, f_hess, g, g_grad, g_hess, x, λ::Real; max_iter=100, ϵ_tol=1e-8)
     for i in 1:max_iter
@@ -124,7 +124,7 @@ function sqp(f, f_grad, f_hess, g, g_grad, g_hess, x, λ::Real; max_iter=100, ϵ
         λ -= step[length(x)+1]
     end
     return x
-end
+end;
 
 # Podobně jako u ostatních metod ukažme nyní variantu metody, která vrací všechny iterace.
 
@@ -148,7 +148,7 @@ function sqp(f, f_grad, f_hess, g, g_grad, g_hess, x, λ::Real; max_iter=100, ϵ
         λs[:,i+1] = λs[:,i] - step[length(x)+1:end]
     end
     return xs, λs
-end
+end;
 
 # Zadefinujme nyní omezení, jeho derivaci a Hessián a konečně pusťme SQP.
 
@@ -163,11 +163,16 @@ create_anim(f, xs, xlims, ylims, "Anim_SQP1.gif";
     fbounds=t->fbounds(t,c,r),
 )
 
+# ![](Anim_SQP1.gif)
 
+# Iterace konvergují opět k lokálnímu minimu. Zadefinujme Lagrangeovu funkci a její derivaci podle $x$. V optimální hodnotě, tedy poslední iteraci, je derivace Lagrangeovy funkce rovna nule, což je podmínka optimality.
 
+L(x,λ,c,r) = f(x) + λ.*f_con(x,c,r)
+L_grad(x,λ,c,r) = g(x) + λ.*g_con(x,c,r)
 
-g(xs[:,end]) + λs[:,end] .* g_con(xs[:,end],c,r)
+L_grad(xs[:,end], λs[:,end], c, r)
 
+# Je dobré si uvědomit, že pro nastartování SQP potřebujeme jak počáteční hodnotu $x$ tak i $\lambda$. Pokud zvolíme stejné $x$ jako v předchozím případě, ale jiné $\lambda$, můžeme konvergovat do jiného bodu.
 
 xs, λs = sqp(f, g, h, x->f_con(x,c,r), x->g_con(x,c,r), x->h_con(x,c,r), [0;-1], 3)
 
@@ -176,12 +181,11 @@ create_anim(f, xs, xlims, ylims, "Anim_SQP2.gif";
     fbounds=t->fbounds(t,c,r),
 )
 
+L_grad(xs[:,end], λs[:,end], c, r)
 
-g(xs[:,end]) + λs[:,end] .* g_con(xs[:,end],c,r)
+# ![](Anim_SQP2.gif)
 
+# # Závěrem
 
-
-# Je dobre vedet, jak to funguje. Ale asi bych pouzil solvery, co delal nekdo jiny.
-
-
+# Toto je poslední notebook na optimalizační metody. Jaké je shrnutí? Je vždy dobré používat už naprogramované věci, protože tyto implemtace obsahují spoustu vychytávek, bez kterých optimalizace v některých případech nemusí konvergovat. Zároveň je ale podle mně důležité metodám alespoň trochu rozumět. Naše pochopení metod může ovlivnit volbu vhodného solveru, zkombinovat dva solvery dohromady nebo v případě problémů naznačit, kde je problém a co by se mělo změnit.
 
