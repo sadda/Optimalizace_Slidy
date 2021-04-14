@@ -10,6 +10,6 @@ Tyto stránky obsahují doplňkový materiál pro výuku kurzu [Optimalizace](ht
 |  Lekce 14: Nelineární metody nejmenších čtverců  |  [Whiteboard](Whiteboard/whiteboard_14.svg)   | [Notebook](Code/lecture_14.ipynb)    |
 |  Lekce 15: Lokální extrémy vázané rovnostmi   |  [Whiteboard](Whiteboard/whiteboard_15.svg)   |  -  |
 |  Lekce 16: Aplikace Lagrangeových multiplikátorů |     |  [Notebook](Code/lecture_16.ipynb)   |
-|  Lekce 17: Úvod do lineárního programování   |     |  -  |
+|  Lekce 17: Úvod do lineárního programování   |     |  [Notebook](Code/lecture_17.ipynb)   |
 
 Notebooky jsou psány v programovacím jazyce [Julia](https://julialang.org/). Pokud ji nemáte nainstalovanou, nevadí, notebooky pořád můžete procházet. Byla snaha notebooky psát tak, aby byly pochopitelné i bez znalosti jazyka. Pokud se chcete o Julii dozvědět víc, je na ČVUTu též [vyučována](https://bit.ly/JuliaML).
